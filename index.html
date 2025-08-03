@@ -6,47 +6,61 @@
   <title>Interaktive Weltkarte</title>
   <style>
     body {
-      font-family: sans-serif;
-      background-color: #f4f4f4;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background-color: #e3f2fd;
       margin: 0;
-      padding: 1rem;
+      padding: 2rem;
       display: flex;
       flex-direction: column;
       align-items: center;
+      color: #333;
     }
 
     h1 {
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+      color: #0d47a1;
+      text-shadow: 1px 1px 0px #fff;
     }
 
     .colorPicker {
       display: flex;
-      border: 4px solid #888;
-      border-radius: 10px;
-      overflow: hidden;
-      width: fit-content;
-      margin-top: 8px;
+      flex-wrap: wrap;
+      border: 4px dashed #0d47a1;
+      border-radius: 12px;
+      padding: 0.5rem;
+      background-color: #bbdefb;
+      margin-bottom: 1.5rem;
+      gap: 0.5rem;
     }
 
     .color {
       width: 40px;
       height: 40px;
       cursor: pointer;
+      border: 2px solid transparent;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .color:hover {
+      transform: scale(1.1);
     }
 
     .selected {
-      outline: 4px solid white;
+      border: 3px solid white;
+      outline: 3px solid #0d47a1;
       box-sizing: border-box;
     }
 
     .map-container {
       width: 100%;
       max-width: 1000px;
-      border: 1px solid #ddd;
+      border: 3px solid #0d47a1;
       background-color: #fff;
       padding: 1rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      border-radius: 16px;
       overflow: hidden;
     }
 
@@ -54,36 +68,51 @@
       width: 100%;
       height: 1200px;
       border: none;
-      transform-origin: top left;
+      zoom: 1;
     }
-
-    /* Farben */
-    .rot { background-color: #f44336; }
-    .gruen { background-color: #4caf50; }
-    .blau { background-color: #2196f3; }
-    .gelb { background-color: #ffeb3b; }
-    .lila { background-color: #9c27b0; }
-    .orange { background-color: #ff9800; }
-    .schwarz { background-color: #000000; }
 
     .zoom-controls {
       margin-top: 1rem;
       display: flex;
       gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     button {
-      padding: 0.5rem 1rem;
+      padding: 0.6rem 1rem;
       font-size: 1rem;
+      background-color: #1976d2;
+      color: white;
+      border: none;
       border-radius: 8px;
-      border: 1px solid #aaa;
       cursor: pointer;
+      font-family: 'Comic Sans MS', cursive;
+      box-shadow: 2px 2px 0px #0d47a1;
+      transition: background-color 0.2s, transform 0.1s;
     }
+
+    button:hover {
+      background-color: #1565c0;
+    }
+
+    button:active {
+      transform: translateY(2px);
+    }
+
+    /* Farben */
+    .rot    { background-color: #f44336; }
+    .gruen  { background-color: #4caf50; }
+    .blau   { background-color: #2196f3; }
+    .gelb   { background-color: #ffeb3b; }
+    .lila   { background-color: #9c27b0; }
+    .orange { background-color: #ff9800; }
+    .schwarz{ background-color: #000000; }
   </style>
 </head>
 <body>
 
-  <h1>Weltkarte färben</h1>
+  <h1>🌍 Weltkarte färben 🎨</h1>
 
   <div class="colorPicker" id="colorPicker">
     <div class="color rot selected" data-color="#f44336"></div>
@@ -100,28 +129,29 @@
   </div>
 
   <div class="zoom-controls">
-    <button onclick="setZoom(0.2)">Zoom 20%</button>
-    <button onclick="setZoom(0.5)">Zoom 50%</button>
-    <button onclick="setZoom(0.8)">Zoom 80%</button>
-    <button onclick="setZoom(1)">Zoom 100%</button>
+    <button onclick="setZoom(0.2)">🔍 20%</button>
+    <button onclick="setZoom(0.5)">🔍 50%</button>
+    <button onclick="setZoom(0.8)">🔍 80%</button>
+    <button onclick="setZoom(1)">🔎 100%</button>
   </div>
 
   <script>
     const colorPicker = document.getElementById('colorPicker');
     const svgFrame = document.getElementById('svgFrame');
 
+    // Farbe auswählen
     colorPicker.addEventListener('click', (e) => {
       if (e.target.classList.contains('color')) {
-        // Entferne vorherige Auswahl
         colorPicker.querySelectorAll('.color').forEach(el => el.classList.remove('selected'));
         e.target.classList.add('selected');
       }
     });
 
+    // SVG interaktiv machen
     svgFrame.addEventListener('load', () => {
       const svgDoc = svgFrame.contentDocument;
       if (!svgDoc) {
-        console.error("Zugriff auf das SVG-Dokument nicht möglich. CORS-Problem?");
+        console.error("Zugriff auf das SVG-Dokument nicht möglich (CORS?)");
         return;
       }
 
@@ -136,8 +166,9 @@
       });
     });
 
+    // Zoom setzen mit `zoom`-Eigenschaft
     function setZoom(factor) {
-      svgFrame.style.transform = `scale(${factor})`;
+      svgFrame.style.zoom = factor;
     }
   </script>
 
