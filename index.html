@@ -147,126 +147,153 @@
   </div>
 
   <script>
-    const colorPicker = document.getElementById('colorPicker');
-    const svgFrame = document.getElementById('svgFrame');
-    const exportBtn = document.getElementById('exportBtn');
-    const importBtn = document.getElementById('importBtn');
-    const fileInput = document.getElementById('fileInput');
+  const colorPicker = document.getElementById('colorPicker');
+  const svgFrame = document.getElementById('svgFrame');
+  const exportBtn = document.getElementById('exportBtn');
+  const importBtn = document.getElementById('importBtn');
+  const fileInput = document.getElementById('fileInput');
 
-    // Objekt zum Speichern der Klickdaten (Land-ID → Farbe)
-    let clickData = {};
+  // Objekt zum Speichern der Farbdaten (Element-ID → Farbe)
+  let clickData = {};
 
-    // Farbe auswählen
-    colorPicker.addEventListener('click', (e) => {
-      if (e.target.classList.contains('color')) {
-        colorPicker.querySelectorAll('.color').forEach(el => el.classList.remove('selected'));
-        e.target.classList.add('selected');
+  // Farbe auswählen
+  colorPicker.addEventListener('click', (e) => {
+    if (e.target.classList.contains('color')) {
+      colorPicker.querySelectorAll('.color').forEach(el => el.classList.remove('selected'));
+      e.target.classList.add('selected');
+    }
+  });
+
+  // Funktion, um ein Element (path oder g) einzufärben und clickData zu aktualisieren
+  function colorElement(el, color) {
+    if (!el) return;
+    // Färbe alle Pfade innerhalb der Gruppe, falls Gruppe, sonst nur das Element selbst
+    if (el.tagName.toLowerCase() === 'g') {
+      el.querySelectorAll('path').forEach(p => p.setAttribute('fill', color));
+    } else {
+      el.setAttribute('fill', color);
+    }
+    clickData[el.id] = color;
+  }
+
+  // SVG laden und interaktiv machen
+  svgFrame.addEventListener('load', () => {
+    const svgDoc = svgFrame.contentDocument;
+    if (!svgDoc) {
+      console.error("Zugriff auf das SVG-Dokument nicht möglich (CORS?)");
+      return;
+    }
+
+    // Länder-Gruppen selektieren, die eine ID haben
+    const countryGroups = svgDoc.querySelectorAll('g[id]');
+
+    countryGroups.forEach(group => {
+      group.style.cursor = 'pointer';
+
+      // Vorhandene Farbe auslesen (z.B. vom ersten Pfad im Group)
+      let currentColor = null;
+      const firstPath = group.querySelector('path[fill]:not([fill="none"])');
+      if (firstPath) currentColor = firstPath.getAttribute('fill');
+
+      if (currentColor) {
+        clickData[group.id] = currentColor;
       }
-    });
 
-    // SVG laden und interaktiv machen
-    svgFrame.addEventListener('load', () => {
-      const svgDoc = svgFrame.contentDocument;
-      if (!svgDoc) {
-        console.error("Zugriff auf das SVG-Dokument nicht möglich (CORS?)");
-        return;
-      }
+      // Klick-Event: Gruppe einfärben
+      group.addEventListener('click', () => {
+        const selected = colorPicker.querySelector('.selected');
+        if (!selected) return;
+        const color = selected.getAttribute('data-color');
+        colorElement(group, color);
+      });
 
-      const paths = svgDoc.querySelectorAll('path');
-      paths.forEach(path => {
-        path.style.cursor = "pointer";
-
-        // Falls dieses Element schon eine Farbe hat (im clickData), anwenden
-        const fill = path.getAttribute('fill');
-        if (fill && fill !== 'none') {
-          const id = path.id || path.getAttribute('id');
-          if (id) {
-            clickData[id] = fill;
-          }
-        }
-
-        path.addEventListener('click', () => {
+      // Optional: auch einzelne Pfade innerhalb der Gruppe klickbar machen
+      group.querySelectorAll('path').forEach(path => {
+        path.style.cursor = 'pointer';
+        path.addEventListener('click', (e) => {
+          e.stopPropagation(); // Verhindert Klick auf Gruppe, wenn Pfad geklickt wird
           const selected = colorPicker.querySelector('.selected');
           if (!selected) return;
-
           const color = selected.getAttribute('data-color');
           path.setAttribute('fill', color);
 
-          // ID sichern, falls nicht vorhanden, erstellen wir eine
-          let id = path.id || path.getAttribute('id');
-          if (!id) {
-            id = 'region-' + Math.random().toString(36).substr(2, 9);
-            path.id = id;
+          // Falls Pfad keine ID hat, eine generieren
+          if (!path.id) {
+            path.id = 'path-' + Math.random().toString(36).slice(2, 9);
           }
-
-          clickData[id] = color;
+          clickData[path.id] = color;
         });
       });
     });
+  });
 
-    // Zoom setzen
-    function setZoom(factor) {
-      svgFrame.style.zoom = factor;
+  // Zoom setzen (optional)
+  function setZoom(factor) {
+    svgFrame.style.zoom = factor;
+  }
+
+  // Klickdaten exportieren
+  exportBtn.addEventListener('click', () => {
+    const dataStr = JSON.stringify(clickData, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'klickdaten.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  // Klickdaten importieren (Datei wählen)
+  importBtn.addEventListener('click', () => {
+    fileInput.value = null;
+    fileInput.click();
+  });
+
+  // Datei verarbeiten und Klickdaten laden
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      try {
+        const jsonData = JSON.parse(event.target.result);
+        loadClickData(jsonData);
+      } catch {
+        alert("Ungültige JSON-Datei!");
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Klickdaten anwenden auf SVG-Elemente
+  function loadClickData(data) {
+    clickData = data;
+
+    const svgDoc = svgFrame.contentDocument;
+    if (!svgDoc) {
+      alert("SVG ist nicht geladen oder Zugriff nicht möglich.");
+      return;
     }
 
-    // Klickdaten exportieren
-    exportBtn.addEventListener('click', () => {
-      const dataStr = JSON.stringify(clickData, null, 2);
-      const blob = new Blob([dataStr], {type: "application/json"});
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'klickdaten.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-
-    // Klickdaten laden - Datei wählen
-    importBtn.addEventListener('click', () => {
-      fileInput.value = null; // Reset
-      fileInput.click();
-    });
-
-    // Datei verarbeiten
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        try {
-          const jsonData = JSON.parse(event.target.result);
-          loadClickData(jsonData);
-        } catch (err) {
-          alert("Ungültige JSON-Datei!");
-        }
-      };
-      reader.readAsText(file);
-    });
-
-    // Klickdaten anwenden
-    function loadClickData(data) {
-      clickData = data;
-
-      const svgDoc = svgFrame.contentDocument;
-      if (!svgDoc) {
-        alert("SVG ist nicht geladen oder Zugriff nicht möglich.");
-        return;
-      }
-
-      Object.entries(clickData).forEach(([id, color]) => {
-        const el = svgDoc.getElementById(id);
-        if (el) {
+    Object.entries(clickData).forEach(([id, color]) => {
+      const el = svgDoc.getElementById(id);
+      if (el) {
+        if (el.tagName.toLowerCase() === 'g') {
+          colorElement(el, color);
+        } else {
           el.setAttribute('fill', color);
         }
-      });
+      }
+    });
 
-      alert("Klickdaten erfolgreich geladen!");
-    }
-  </script>
+    alert("Klickdaten erfolgreich geladen!");
+  }
+</script>
 
 </body>
 </html>
