@@ -42,6 +42,10 @@
       height: 600px;
       border: none;
     }
+
+    svgFrame {
+      zoom: 0.4;
+    }
   </style>
 </head>
 <body>
@@ -63,7 +67,14 @@
     <iframe id="svgFrame" src="world.svg"></iframe>
   </div>
 
+  <button onclick="changeStyle()">Style ändern</button>
+
   <script>
+    function changeStyle() {
+      const svgFrame = document.getElementById('svgFrame');
+      svgFrame.style.zoom = 0;
+    }
+    
     const colorPicker = document.getElementById('colorPicker');
     const svgFrame = document.getElementById('svgFrame');
 
