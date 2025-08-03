@@ -53,17 +53,16 @@
 
   <h1>Weltkarte färben</h1>
 
-  <label for="colorPicker">Farbe auswählen:</label>
-  <select id="colorPicker">
-    <option value="#f44336">Rot</option>
-    <option value="#4caf50">Grün</option>
-    <option value="#2196f3">Blau</option>
-    <option value="#ffeb3b">Gelb</option>
-    <option value="#9c27b0">Lila</option>
-    <option value="#ff9800">Orange</option>
-    <option value="#000000">Schwarz</option>
-  </select>
-
+  <div class="colorPicker" id="colorPicker">
+    <div class="color rot selected" data-color="#f44336"></div>
+    <div class="color gruen" data-color="#4caf50"></div>
+    <div class="color blau" data-color="#2196f3"></div>
+    <div class="color gelb" data-color="#ffeb3b"></div>
+    <div class="color lila" data-color="#9c27b0"></div>
+    <div class="color orange" data-color="#ff9800"></div>
+    <div class="color schwarz" data-color="#000000"></div>
+  </div>
+  
   <div class="map-container">
     <iframe id="svgFrame" src="world.svg"></iframe>
   </div>
@@ -74,19 +73,24 @@
 
       <script>
     const colorPicker = document.getElementById('colorPicker');
-    const svgFrame = document.getElementById('svgFrame');
+const svgFrame = document.getElementById('svgFrame');
 
-    svgFrame.addEventListener('load', () => {
-      const svgDoc = svgFrame.contentDocument;
-      const paths = svgDoc.querySelectorAll('path');
+svgFrame.addEventListener('load', () => {
+  const svgDoc = svgFrame.contentDocument;
+  const paths = svgDoc.querySelectorAll('path');
 
-      paths.forEach(path => {
-        path.style.cursor = "pointer";
-        path.addEventListener('click', () => {
-          path.setAttribute('fill', colorPicker.value);
-        });
-      });
+  paths.forEach(path => {
+    path.style.cursor = "pointer";
+    path.addEventListener('click', () => {
+      const selectedColorDiv = colorPicker.querySelector('.selected');
+      if (selectedColorDiv) {
+        const selectedColor = selectedColorDiv.getAttribute('data-color');
+        path.setAttribute('fill', selectedColor);
+      }
     });
+  });
+});
+
   </script>
 
 </body>
