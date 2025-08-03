@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
@@ -19,34 +19,7 @@
       margin-bottom: 1rem;
     }
 
-    select {
-      padding: 0.5rem;
-      font-size: 1rem;
-      margin-bottom: 1rem;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-
-    .map-container {
-      width: 100%;
-      
-      max-width: 1000px;
-      border: 1px solid #ddd;
-      background-color: #fff;
-      padding: 1rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      border-radius: 12px;
-    }
-
-    iframe {
-      width: 100%;
-      
-      height: 1200px;
-      border: none;
-    
-    }
-
-    colorPicker {
+    .colorPicker {
       display: flex;
       border: 4px solid #888;
       border-radius: 10px;
@@ -66,6 +39,24 @@
       box-sizing: border-box;
     }
 
+    .map-container {
+      width: 100%;
+      max-width: 1000px;
+      border: 1px solid #ddd;
+      background-color: #fff;
+      padding: 1rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    iframe {
+      width: 100%;
+      height: 1200px;
+      border: none;
+      transform-origin: top left;
+    }
+
     /* Farben */
     .rot { background-color: #f44336; }
     .gruen { background-color: #4caf50; }
@@ -74,7 +65,20 @@
     .lila { background-color: #9c27b0; }
     .orange { background-color: #ff9800; }
     .schwarz { background-color: #000000; }
- 
+
+    .zoom-controls {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #aaa;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -90,35 +94,51 @@
     <div class="color orange" data-color="#ff9800"></div>
     <div class="color schwarz" data-color="#000000"></div>
   </div>
-  
+
   <div class="map-container">
     <iframe id="svgFrame" src="world.svg"></iframe>
   </div>
 
-<button onclick="document.getElementById('svgFrame').style.zoom = 0.2;">Zoom 20%</button>
-<button onclick="document.getElementById('svgFrame').style.zoom = 0.5;">Zoom 50%</button>
-<button onclick="document.getElementById('svgFrame').style.zoom = 0.8;">Zoom 80%</button>
+  <div class="zoom-controls">
+    <button onclick="setZoom(0.2)">Zoom 20%</button>
+    <button onclick="setZoom(0.5)">Zoom 50%</button>
+    <button onclick="setZoom(0.8)">Zoom 80%</button>
+    <button onclick="setZoom(1)">Zoom 100%</button>
+  </div>
 
-      <script>
+  <script>
     const colorPicker = document.getElementById('colorPicker');
-const svgFrame = document.getElementById('svgFrame');
+    const svgFrame = document.getElementById('svgFrame');
 
-svgFrame.addEventListener('load', () => {
-  const svgDoc = svgFrame.contentDocument;
-  const paths = svgDoc.querySelectorAll('path');
-
-  paths.forEach(path => {
-    path.style.cursor = "pointer";
-    path.addEventListener('click', () => {
-      const selectedColorDiv = colorPicker.querySelector('.selected');
-      if (selectedColorDiv) {
-        const selectedColor = selectedColorDiv.getAttribute('data-color');
-        path.setAttribute('fill', selectedColor);
+    colorPicker.addEventListener('click', (e) => {
+      if (e.target.classList.contains('color')) {
+        // Entferne vorherige Auswahl
+        colorPicker.querySelectorAll('.color').forEach(el => el.classList.remove('selected'));
+        e.target.classList.add('selected');
       }
     });
-  });
-});
 
+    svgFrame.addEventListener('load', () => {
+      const svgDoc = svgFrame.contentDocument;
+      if (!svgDoc) {
+        console.error("Zugriff auf das SVG-Dokument nicht möglich. CORS-Problem?");
+        return;
+      }
+
+      const paths = svgDoc.querySelectorAll('path');
+      paths.forEach(path => {
+        path.style.cursor = "pointer";
+        path.addEventListener('click', () => {
+          const selected = colorPicker.querySelector('.selected');
+          const color = selected.getAttribute('data-color');
+          path.setAttribute('fill', color);
+        });
+      });
+    });
+
+    function setZoom(factor) {
+      svgFrame.style.transform = `scale(${factor})`;
+    }
   </script>
 
 </body>
