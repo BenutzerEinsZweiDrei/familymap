@@ -28,24 +28,27 @@
     }
 
     .map-container {
-      width: device-width;
+      width: 100%;
       max-width: 1000px;
+      height: 600px;
+      overflow: auto;
       border: 1px solid #ddd;
       background-color: #fff;
-      padding: 1rem;
+      padding: 0;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       border-radius: 12px;
+      position: relative;
     }
 
-    svgMap {
+    .zoom-wrapper {
+      transform-origin: 0 0;
+      transition: transform 0.1s ease;
+    }
+
+    object {
       width: 100%;
-      height: auto;
-    }
-
-    path:hover {
-      cursor: pointer;
-      stroke: #000;
-      stroke-width: 1.2;
+      height: 100%;
+      pointer-events: none; /* wird per JS wieder aktiviert */
     }
   </style>
 </head>
@@ -65,26 +68,42 @@
   </select>
 
   <div class="map-container" id="mapContainer">
-    <!-- Die Weltkarte wird hier eingefügt -->
-    <!-- Füge den Inhalt der world.svg hier ein -->
-    <!-- Zum Beispiel: <svg> ... </svg> -->
-    <!-- Oder lade sie per <object> oder <embed> -->
-    <object id="svgMap" type="image/svg+xml" data="world.svg"></object>
+    <div class="zoom-wrapper" id="zoomWrapper">
+      <object id="svgMap" type="image/svg+xml" data="world.svg"></object>
+    </div>
   </div>
 
   <script>
     const colorPicker = document.getElementById('colorPicker');
     const svgObject = document.getElementById('svgMap');
+    const zoomWrapper = document.getElementById('zoomWrapper');
 
+    let scale = 1;
+
+    // Zoom per STRG + Mausrad
+    document.getElementById('mapContainer').addEventListener('wheel', (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        scale = Math.min(Math.max(0.5, scale + delta), 4); // Begrenze Zoom
+        zoomWrapper.style.transform = `scale(${scale})`;
+      }
+    });
+
+    // SVG interaktiv machen
     svgObject.addEventListener('load', () => {
       const svgDoc = svgObject.contentDocument;
       const paths = svgDoc.querySelectorAll('path');
 
       paths.forEach(path => {
+        path.style.cursor = 'pointer';
         path.addEventListener('click', () => {
           path.setAttribute('fill', colorPicker.value);
         });
       });
+
+      // Pointer Events aktivieren
+      svgObject.style.pointerEvents = 'auto';
     });
   </script>
 
