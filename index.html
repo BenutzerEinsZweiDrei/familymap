@@ -5,13 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Interaktive Weltkarte</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
-      font-family: system-ui, sans-serif;
-      background-color: #f9f9f9;
+      font-family: sans-serif;
+      background-color: #f4f4f4;
       margin: 0;
       padding: 1rem;
       display: flex;
@@ -21,44 +17,35 @@
 
     h1 {
       margin-bottom: 1rem;
-      text-align: center;
-      font-size: 1.5rem;
     }
 
     select {
-      padding: 0.5rem 1rem;
+      padding: 0.5rem;
       font-size: 1rem;
       margin-bottom: 1rem;
-      border-radius: 0.5rem;
+      border-radius: 8px;
       border: 1px solid #ccc;
-      appearance: none;
-      background-color: #fff;
-      width: 100%;
-      max-width: 300px;
     }
 
     .map-container {
       width: 100%;
       max-width: 1000px;
-      aspect-ratio: 2 / 1; /* Responsive aspect */
+      border: 1px solid #ddd;
+      background-color: #fff;
+      padding: 1rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       border-radius: 12px;
-      overflow: hidden;
-      background-color: white;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
-    object {
+    svg {
       width: 100%;
-      height: 100%;
-      border: none;
+      height: auto;
     }
 
-    /* Optional: make dropdown more stylish on mobile */
-    @media (hover: none) and (pointer: coarse) {
-      select {
-        font-size: 1.2rem;
-        padding: 0.75rem;
-      }
+    path:hover {
+      cursor: pointer;
+      stroke: #000;
+      stroke-width: 1.2;
     }
   </style>
 </head>
@@ -66,7 +53,7 @@
 
   <h1>Weltkarte färben</h1>
 
-  <label for="colorPicker" style="font-weight: 600;">Farbe auswählen:</label>
+  <label for="colorPicker">Farbe auswählen:</label>
   <select id="colorPicker">
     <option value="#f44336">Rot</option>
     <option value="#4caf50">Grün</option>
@@ -77,7 +64,11 @@
     <option value="#000000">Schwarz</option>
   </select>
 
-  <div class="map-container">
+  <div class="map-container" id="mapContainer">
+    <!-- Die Weltkarte wird hier eingefügt -->
+    <!-- Füge den Inhalt der world.svg hier ein -->
+    <!-- Zum Beispiel: <svg> ... </svg> -->
+    <!-- Oder lade sie per <object> oder <embed> -->
     <object id="svgMap" type="image/svg+xml" data="world.svg"></object>
   </div>
 
@@ -87,18 +78,10 @@
 
     svgObject.addEventListener('load', () => {
       const svgDoc = svgObject.contentDocument;
-      if (!svgDoc) return;
-
       const paths = svgDoc.querySelectorAll('path');
-      paths.forEach(path => {
-        path.style.cursor = 'pointer';
-        path.addEventListener('click', () => {
-          path.setAttribute('fill', colorPicker.value);
-        });
 
-        // Optional: touch support
-        path.addEventListener('touchstart', (e) => {
-          e.preventDefault();
+      paths.forEach(path => {
+        path.addEventListener('click', () => {
           path.setAttribute('fill', colorPicker.value);
         });
       });
