@@ -108,6 +108,11 @@
     .lila   { background-color: #9c27b0; }
     .orange { background-color: #ff9800; }
     .schwarz{ background-color: #000000; }
+
+    .file-input {
+      display: none;
+    }
+
   </style>
 </head>
 <body>
@@ -135,9 +140,21 @@
     <button onclick="setZoom(1)">🔎 100%</button>
   </div>
 
+  <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
+    <button id="exportBtn">💾 Exportiere Klickdaten (JSON)</button>
+    <button id="importBtn">📂 Lade Klickdaten (JSON)</button>
+    <input type="file" id="fileInput" class="file-input" accept=".json" />
+  </div>
+
   <script>
     const colorPicker = document.getElementById('colorPicker');
     const svgFrame = document.getElementById('svgFrame');
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const fileInput = document.getElementById('fileInput');
+
+    // Objekt zum Speichern der Klickdaten (Land-ID → Farbe)
+    let clickData = {};
 
     // Farbe auswählen
     colorPicker.addEventListener('click', (e) => {
@@ -147,7 +164,7 @@
       }
     });
 
-    // SVG interaktiv machen
+    // SVG laden und interaktiv machen
     svgFrame.addEventListener('load', () => {
       const svgDoc = svgFrame.contentDocument;
       if (!svgDoc) {
@@ -158,17 +175,96 @@
       const paths = svgDoc.querySelectorAll('path');
       paths.forEach(path => {
         path.style.cursor = "pointer";
+
+        // Falls dieses Element schon eine Farbe hat (im clickData), anwenden
+        const fill = path.getAttribute('fill');
+        if (fill && fill !== 'none') {
+          const id = path.id || path.getAttribute('id');
+          if (id) {
+            clickData[id] = fill;
+          }
+        }
+
         path.addEventListener('click', () => {
           const selected = colorPicker.querySelector('.selected');
+          if (!selected) return;
+
           const color = selected.getAttribute('data-color');
           path.setAttribute('fill', color);
+
+          // ID sichern, falls nicht vorhanden, erstellen wir eine
+          let id = path.id || path.getAttribute('id');
+          if (!id) {
+            id = 'region-' + Math.random().toString(36).substr(2, 9);
+            path.id = id;
+          }
+
+          clickData[id] = color;
         });
       });
     });
 
-    // Zoom setzen mit `zoom`-Eigenschaft
+    // Zoom setzen
     function setZoom(factor) {
       svgFrame.style.zoom = factor;
+    }
+
+    // Klickdaten exportieren
+    exportBtn.addEventListener('click', () => {
+      const dataStr = JSON.stringify(clickData, null, 2);
+      const blob = new Blob([dataStr], {type: "application/json"});
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'klickdaten.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Klickdaten laden - Datei wählen
+    importBtn.addEventListener('click', () => {
+      fileInput.value = null; // Reset
+      fileInput.click();
+    });
+
+    // Datei verarbeiten
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        try {
+          const jsonData = JSON.parse(event.target.result);
+          loadClickData(jsonData);
+        } catch (err) {
+          alert("Ungültige JSON-Datei!");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // Klickdaten anwenden
+    function loadClickData(data) {
+      clickData = data;
+
+      const svgDoc = svgFrame.contentDocument;
+      if (!svgDoc) {
+        alert("SVG ist nicht geladen oder Zugriff nicht möglich.");
+        return;
+      }
+
+      Object.entries(clickData).forEach(([id, color]) => {
+        const el = svgDoc.getElementById(id);
+        if (el) {
+          el.setAttribute('fill', color);
+        }
+      });
+
+      alert("Klickdaten erfolgreich geladen!");
     }
   </script>
 
