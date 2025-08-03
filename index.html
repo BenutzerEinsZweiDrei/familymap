@@ -145,15 +145,15 @@
     <button id="importBtn">📂 Lade Klickdaten (JSON)</button>
     <input type="file" id="fileInput" class="file-input" accept=".json" />
   </div>
-
-  <script>
+ 
+<script>
   const colorPicker = document.getElementById('colorPicker');
   const svgFrame = document.getElementById('svgFrame');
   const exportBtn = document.getElementById('exportBtn');
   const importBtn = document.getElementById('importBtn');
   const fileInput = document.getElementById('fileInput');
 
-  // Objekt zum Speichern der Farbdaten (Element-ID → Farbe)
+  // Objekt zum Speichern der Farbdaten (Gruppen-ID → Farbe)
   let clickData = {};
 
   // Farbe auswählen
@@ -164,19 +164,15 @@
     }
   });
 
-  // Funktion, um ein Element (path oder g) einzufärben und clickData zu aktualisieren
-  function colorElement(el, color) {
-    if (!el) return;
-    // Färbe alle Pfade innerhalb der Gruppe, falls Gruppe, sonst nur das Element selbst
-    if (el.tagName.toLowerCase() === 'g') {
-      el.querySelectorAll('path').forEach(p => p.setAttribute('fill', color));
-    } else {
-      el.setAttribute('fill', color);
-    }
-    clickData[el.id] = color;
+  // Funktion, um eine Gruppe einzufärben und clickData zu aktualisieren
+  function colorGroup(group, color) {
+    if (!group) return;
+    // Färbe alle Pfade innerhalb der Gruppe
+    group.querySelectorAll('path').forEach(path => path.setAttribute('fill', color));
+    clickData[group.id] = color;
   }
 
-  // SVG laden und interaktiv machen
+  // SVG laden und Länder-Gruppen interaktiv machen
   svgFrame.addEventListener('load', () => {
     const svgDoc = svgFrame.contentDocument;
     if (!svgDoc) {
@@ -184,50 +180,29 @@
       return;
     }
 
-    // Länder-Gruppen selektieren, die eine ID haben
+    // Länder-Gruppen mit ID auswählen
     const countryGroups = svgDoc.querySelectorAll('g[id]');
 
     countryGroups.forEach(group => {
       group.style.cursor = 'pointer';
 
-      // Vorhandene Farbe auslesen (z.B. vom ersten Pfad im Group)
-      let currentColor = null;
+      // Aktuelle Farbe auslesen (vom ersten Pfad)
       const firstPath = group.querySelector('path[fill]:not([fill="none"])');
-      if (firstPath) currentColor = firstPath.getAttribute('fill');
-
-      if (currentColor) {
-        clickData[group.id] = currentColor;
+      if (firstPath) {
+        clickData[group.id] = firstPath.getAttribute('fill');
       }
 
-      // Klick-Event: Gruppe einfärben
+      // Klick auf Gruppe färbt alle Pfade darin
       group.addEventListener('click', () => {
         const selected = colorPicker.querySelector('.selected');
         if (!selected) return;
         const color = selected.getAttribute('data-color');
-        colorElement(group, color);
-      });
-
-      // Optional: auch einzelne Pfade innerhalb der Gruppe klickbar machen
-      group.querySelectorAll('path').forEach(path => {
-        path.style.cursor = 'pointer';
-        path.addEventListener('click', (e) => {
-          e.stopPropagation(); // Verhindert Klick auf Gruppe, wenn Pfad geklickt wird
-          const selected = colorPicker.querySelector('.selected');
-          if (!selected) return;
-          const color = selected.getAttribute('data-color');
-          path.setAttribute('fill', color);
-
-          // Falls Pfad keine ID hat, eine generieren
-          if (!path.id) {
-            path.id = 'path-' + Math.random().toString(36).slice(2, 9);
-          }
-          clickData[path.id] = color;
-        });
+        colorGroup(group, color);
       });
     });
   });
 
-  // Zoom setzen (optional)
+  // Zoom-Funktion (optional)
   function setZoom(factor) {
     svgFrame.style.zoom = factor;
   }
@@ -247,13 +222,13 @@
     URL.revokeObjectURL(url);
   });
 
-  // Klickdaten importieren (Datei wählen)
+  // Klickdaten importieren (Datei auswählen)
   importBtn.addEventListener('click', () => {
     fileInput.value = null;
     fileInput.click();
   });
 
-  // Datei verarbeiten und Klickdaten laden
+  // JSON-Datei laden und Daten anwenden
   fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -270,7 +245,7 @@
     reader.readAsText(file);
   });
 
-  // Klickdaten anwenden auf SVG-Elemente
+  // Klickdaten auf Gruppen anwenden
   function loadClickData(data) {
     clickData = data;
 
@@ -281,19 +256,16 @@
     }
 
     Object.entries(clickData).forEach(([id, color]) => {
-      const el = svgDoc.getElementById(id);
-      if (el) {
-        if (el.tagName.toLowerCase() === 'g') {
-          colorElement(el, color);
-        } else {
-          el.setAttribute('fill', color);
-        }
+      const group = svgDoc.getElementById(id);
+      if (group && group.tagName.toLowerCase() === 'g') {
+        colorGroup(group, color);
       }
     });
 
     alert("Klickdaten erfolgreich geladen!");
   }
 </script>
+
 
 </body>
 </html>
