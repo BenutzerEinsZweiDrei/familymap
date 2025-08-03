@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interaktive Weltkarte</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+    }
+
+    select {
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .map-container {
+      width: 100%;
+      max-width: 1000px;
+      border: 1px solid #ddd;
+      background-color: #fff;
+      padding: 1rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 12px;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+    }
+
+    path:hover {
+      cursor: pointer;
+      stroke: #000;
+      stroke-width: 1.2;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Weltkarte färben</h1>
+
+  <label for="colorPicker">Farbe auswählen:</label>
+  <select id="colorPicker">
+    <option value="#f44336">Rot</option>
+    <option value="#4caf50">Grün</option>
+    <option value="#2196f3">Blau</option>
+    <option value="#ffeb3b">Gelb</option>
+    <option value="#9c27b0">Lila</option>
+    <option value="#ff9800">Orange</option>
+    <option value="#000000">Schwarz</option>
+  </select>
+
+  <div class="map-container" id="mapContainer">
+    <!-- Die Weltkarte wird hier eingefügt -->
+    <!-- Füge den Inhalt der world.svg hier ein -->
+    <!-- Zum Beispiel: <svg> ... </svg> -->
+    <!-- Oder lade sie per <object> oder <embed> -->
+    <object id="svgMap" type="image/svg+xml" data="world.svg"></object>
+  </div>
+
+  <script>
+    const colorPicker = document.getElementById('colorPicker');
+    const svgObject = document.getElementById('svgMap');
+
+    svgObject.addEventListener('load', () => {
+      const svgDoc = svgObject.contentDocument;
+      const paths = svgDoc.querySelectorAll('path');
+
+      paths.forEach(path => {
+        path.addEventListener('click', () => {
+          path.setAttribute('fill', colorPicker.value);
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>
