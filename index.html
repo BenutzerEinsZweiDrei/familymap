@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
@@ -27,6 +27,21 @@
       border: 1px solid #ccc;
     }
 
+    .zoom-controls {
+      margin-bottom: 1rem;
+    }
+
+    .zoom-controls button {
+      padding: 0.5rem 1rem;
+      font-size: 1.2rem;
+      margin: 0 0.5rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #2196f3;
+      color: white;
+      cursor: pointer;
+    }
+
     .map-container {
       width: 100%;
       max-width: 1000px;
@@ -35,13 +50,21 @@
       padding: 1rem;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .iframe-wrapper {
+      width: 100%;
+      height: 600px;
+      overflow: auto;
+      transform-origin: top left;
     }
 
     iframe {
       width: 100%;
-      height: 600px;
+      height: 100%;
       border: none;
-      zoom: 0.1;
+      transform-origin: top left;
     }
   </style>
 </head>
@@ -60,13 +83,41 @@
     <option value="#000000">Schwarz</option>
   </select>
 
+  <div class="zoom-controls">
+    <button id="zoomIn">+</button>
+    <button id="zoomOut">−</button>
+  </div>
+
   <div class="map-container">
-    <iframe id="svgFrame" src="world.svg"></iframe>
+    <div class="iframe-wrapper" id="iframeWrapper">
+      <iframe id="svgFrame" src="world.svg"></iframe>
+    </div>
   </div>
 
   <script>
     const colorPicker = document.getElementById('colorPicker');
     const svgFrame = document.getElementById('svgFrame');
+    const zoomInBtn = document.getElementById('zoomIn');
+    const zoomOutBtn = document.getElementById('zoomOut');
+    const iframeWrapper = document.getElementById('iframeWrapper');
+
+    let scale = 1;
+
+    zoomInBtn.addEventListener('click', () => {
+      scale += 0.1;
+      applyZoom();
+    });
+
+    zoomOutBtn.addEventListener('click', () => {
+      scale = Math.max(0.1, scale - 0.1);
+      applyZoom();
+    });
+
+    function applyZoom() {
+      svgFrame.style.transform = `scale(${scale})`;
+      iframeWrapper.scrollLeft = 0;
+      iframeWrapper.scrollTop = 0;
+    }
 
     svgFrame.addEventListener('load', () => {
       const svgDoc = svgFrame.contentDocument;
